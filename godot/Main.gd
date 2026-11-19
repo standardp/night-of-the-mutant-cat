@@ -719,28 +719,48 @@ func _texts() -> Dictionary:
 
 # ---------------------------------------------------------------- start screen
 func _show_start() -> void:
+	overlay.color = Color(0.03, 0.02, 0.04, 0.72)
 	var box := VBoxContainer.new()
 	box.set_anchors_preset(Control.PRESET_FULL_RECT)
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_theme_constant_override("separation", 12)
+	box.add_theme_constant_override("separation", 10)
 	overlay.add_child(box)
+
 	var t := Label.new()
-	t.text = "NIGHT OF THE MUTANT CAT"
-	t.add_theme_font_size_override("font_size", 24)
-	t.add_theme_color_override("font_color", Color(0.91, 0.71, 0.29))
+	t.text = "NIGHT OF THE"
+	t.add_theme_font_size_override("font_size", 26)
+	t.add_theme_color_override("font_color", Color(0.95, 0.95, 0.92))
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(t)
-	var p := Label.new()
-	p.text = "Three flatmates. One cat that drank from the fish tank.\n\nWES hacks  ·  TANK lifts  ·  DR. VIC calms"
-	p.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	p.add_theme_font_size_override("font_size", 14)
-	box.add_child(p)
+
+	var t2 := Label.new()
+	t2.text = "MUTANT CAT"
+	t2.add_theme_font_size_override("font_size", 46)
+	t2.add_theme_color_override("font_color", Color(0.91, 0.71, 0.29))
+	t2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(t2)
+
+	var sub := Label.new()
+	sub.text = "THREE FLATMATES - ONE FREEZER"
+	sub.add_theme_font_size_override("font_size", 12)
+	sub.add_theme_color_override("font_color", Color(0.63, 0.58, 0.72))
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(sub)
+
+	var p2 := Label.new()
+	p2.text = "WES hacks    TANK lifts    DR. VIC calms"
+	p2.add_theme_font_size_override("font_size", 14)
+	p2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(p2)
+
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 14)
 	box.add_child(row)
-	for pair in [["PLAY IN ENGLISH", "en"], ["JUGAR EN ESPAÑOL", "es"]]:
+	for pair in [["PLAY IN ENGLISH", "en"], ["JUGAR EN ESPANOL", "es"]]:
 		var b := Button.new()
 		b.text = pair[0]
-		b.add_theme_font_size_override("font_size", 16)
+		b.add_theme_font_size_override("font_size", 18)
+		b.custom_minimum_size = Vector2(0, 46)
 		b.pressed.connect(func(): box.queue_free(); _start(pair[1]))
 		row.add_child(b)
