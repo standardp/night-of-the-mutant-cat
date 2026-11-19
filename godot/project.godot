@@ -9,15 +9,18 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 
 [display]
 
-window/size/viewport_width=320
-window/size/viewport_height=260
-window/size/window_width_override=1120
-window/size/window_height_override=910
+window/size/viewport_width=640
+window/size/viewport_height=520
+window/size/window_width_override=960
+window/size/window_height_override=780
 window/stretch/mode="canvas_items"
-window/stretch/aspect="expand"
+window/stretch/aspect="keep"
+window/stretch/scale_mode="integer"
 
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0
+2d/snap/snap_2d_transforms_to_pixel=true
+2d/snap/snap_2d_vertices_to_pixel=true
 renderer/rendering_method="gl_compatibility"
 environment/defaults/default_clear_color=Color(0.04, 0.03, 0.05, 1)

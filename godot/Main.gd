@@ -108,6 +108,8 @@ func _ready() -> void:
 func _solve() -> void:
 	await get_tree().create_timer(0.5).timeout
 	_start("es")
+	await get_tree().create_timer(0.3).timeout
+	print("DBG vis=", actor.visible, " tex=", actor.texture, " pos=", actor.position, " gpos=", actor.global_position, " scale_world=", world.scale, " world_pos=", world.position, " stage=", stage.size)
 	await get_tree().create_timer(0.4).timeout
 	_switch("tank")
 	_fuse()
@@ -141,17 +143,28 @@ func _build() -> void:
 	clear.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(clear)
 
+	# fuente pixel, sin suavizado
+	var pf := FontFile.new()
+	pf.load_dynamic_font("res://assets/font.ttf")
+	pf.antialiasing = TextServer.FONT_ANTIALIASING_NONE
+	pf.hinting = TextServer.HINTING_NONE
+	pf.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
+	var th := Theme.new()
+	th.default_font = pf
+	th.default_font_size = 14
+	theme = th
+
 	# barra de personajes arriba
 	crew_bar = HBoxContainer.new()
 	crew_bar.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	crew_bar.offset_bottom = 16
-	crew_bar.add_theme_constant_override("separation", 3)
+	crew_bar.offset_bottom = 30
+	crew_bar.add_theme_constant_override("separation", 6)
 	add_child(crew_bar)
 	for who in ["wes", "tank", "vic"]:
 		var b := Button.new()
 		b.flat = false
 		b.focus_mode = Control.FOCUS_NONE
-		b.add_theme_font_size_override("font_size", 7)
+		b.add_theme_font_size_override("font_size", 13)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.pressed.connect(func(): _switch(who))
 		crew_bar.add_child(b)
@@ -160,8 +173,8 @@ func _build() -> void:
 	stage = Control.new()
 	stage.anchor_right = 1.0
 	stage.anchor_bottom = 1.0
-	stage.offset_top = 18
-	stage.offset_bottom = -62
+	stage.offset_top = 32
+	stage.offset_bottom = -112
 	stage.clip_contents = true
 	add_child(stage)
 	stage.resized.connect(_layout)
@@ -191,48 +204,48 @@ func _build() -> void:
 	actor.texture = SPR["wes"]
 	actor.centered = false
 	actor.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	actor.position = Vector2(150, 128)
+	actor.position = Vector2(260, 106)
 	world.add_child(actor)
 
 	# HUD abajo
 	var hud := ColorRect.new()
 	hud.color = Color(0.10, 0.08, 0.13)
 	hud.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	hud.offset_top = -60
+	hud.offset_top = -110
 	add_child(hud)
 
-	room_lbl = _label("", 8, Color(0.65, 0.6, 0.72), Vector2(6, 0), Vector2(200, 10))
+	room_lbl = _label("", 13, Color(0.65, 0.6, 0.72), Vector2(10, 0), Vector2(300, 16))
 	room_lbl.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	room_lbl.offset_top = -58
-	room_lbl.offset_left = 6
+	room_lbl.offset_top = -108
+	room_lbl.offset_left = 10
 
-	log_lbl = _label("", 10, Color(0.91, 0.71, 0.29), Vector2(6, 0), Vector2(10, 26))
+	log_lbl = _label("", 14, Color(0.91, 0.71, 0.29), Vector2(10, 0), Vector2(10, 42))
 	log_lbl.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	log_lbl.offset_left = 6
-	log_lbl.offset_right = -6
-	log_lbl.offset_top = -48
-	log_lbl.offset_bottom = -22
+	log_lbl.offset_left = 10
+	log_lbl.offset_right = -10
+	log_lbl.offset_top = -92
+	log_lbl.offset_bottom = -50
 	log_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
-	sent_lbl = _label("", 9, Color(0.75, 0.7, 0.82), Vector2(6, 0), Vector2(10, 10))
+	sent_lbl = _label("", 13, Color(0.75, 0.7, 0.82), Vector2(10, 0), Vector2(10, 14))
 	sent_lbl.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	sent_lbl.offset_left = 6
-	sent_lbl.offset_top = -20
-	sent_lbl.offset_bottom = -10
+	sent_lbl.offset_left = 10
+	sent_lbl.offset_top = -46
+	sent_lbl.offset_bottom = -32
 
 	inv_bar = HBoxContainer.new()
 	inv_bar.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	inv_bar.offset_left = 6
-	inv_bar.offset_top = -108
-	inv_bar.add_theme_constant_override("separation", 3)
+	inv_bar.offset_left = 10
+	inv_bar.offset_top = -196
+	inv_bar.add_theme_constant_override("separation", 6)
 	add_child(inv_bar)
 
 	meter = ProgressBar.new()
 	meter.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	meter.offset_left = -70
-	meter.offset_top = -108
-	meter.offset_right = -6
-	meter.offset_bottom = -102
+	meter.offset_left = -160
+	meter.offset_top = -196
+	meter.offset_right = -10
+	meter.offset_bottom = -188
 	meter.max_value = 100
 	meter.show_percentage = false
 	add_child(meter)
@@ -240,20 +253,20 @@ func _build() -> void:
 	verb_bar = HBoxContainer.new()
 	verb_bar.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	verb_bar.offset_left = 200
-	verb_bar.offset_top = -18
-	verb_bar.offset_bottom = -2
+	verb_bar.offset_top = -32
+	verb_bar.offset_bottom = -4
 	verb_bar.alignment = BoxContainer.ALIGNMENT_END
-	verb_bar.add_theme_constant_override("separation", 3)
+	verb_bar.add_theme_constant_override("separation", 6)
 	add_child(verb_bar)
 
 	var hint := Button.new()
 	hint.text = "?"
 	hint.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	hint.offset_left = -26
-	hint.offset_top = -58
-	hint.offset_right = -6
-	hint.offset_bottom = -44
-	hint.add_theme_font_size_override("font_size", 8)
+	hint.offset_left = -40
+	hint.offset_top = -108
+	hint.offset_right = -10
+	hint.offset_bottom = -78
+	hint.add_theme_font_size_override("font_size", 14)
 	hint.pressed.connect(_hint)
 	add_child(hint)
 
@@ -265,7 +278,8 @@ func _build() -> void:
 func _layout() -> void:
 	if not is_instance_valid(world) or stage == null:
 		return
-	var s := maxf(stage.size.x / 320.0, stage.size.y / 200.0)
+	# escala por ancho y ancla el fondo: el piso y los personajes nunca se recortan
+	var s := minf(stage.size.x / 320.0, stage.size.y / 200.0)
 	world.scale = Vector2(s, s)
 	world.position = Vector2(
 		(stage.size.x - 320.0 * s) * 0.5,
@@ -336,7 +350,7 @@ func _build_verbs() -> void:
 	for v in list:
 		var b := Button.new()
 		b.text = TX["ab"][state["cat"]] if v == ABIL[state["cat"]] else TX["verbs"][v]
-		b.add_theme_font_size_override("font_size", 6)
+		b.add_theme_font_size_override("font_size", 13)
 		b.focus_mode = Control.FOCUS_NONE
 		var sel: bool = state["verb"] == v
 		b.modulate = Color(0.55, 0.85, 0.7) if sel else Color(1, 1, 1)
@@ -355,7 +369,7 @@ func _build_inv() -> void:
 		var b := Button.new()
 		b.icon = ICON.get(it, null)
 		b.expand_icon = true
-		b.custom_minimum_size = Vector2(26, 26)
+		b.custom_minimum_size = Vector2(44, 44)
 		b.tooltip_text = TX["hs"].get(it, it)
 		b.focus_mode = Control.FOCUS_NONE
 		if state["item"] == it:
@@ -405,7 +419,7 @@ func _spot(id: String) -> void:
 		_go(ROOMS[state["room"]]["exits"][id])
 		return
 	if state["verb"] == "WALK":
-		actor.position.x = clampf(spot_layer.get_child(0).position.x if false else _spot_center(id), 10, 280)
+		actor.position.x = clampf(_spot_center(id), 16, 266)
 		return
 	if state["verb"] == "LOOK":
 		_say(_look(id))
@@ -567,12 +581,12 @@ func _win() -> void:
 	_refresh()
 	_say(TX["winLog"])
 	var box := VBoxContainer.new()
-	box.position = Vector2(30, 50)
-	box.size = Vector2(260, 100)
+	box.position = Vector2(60, 110)
+	box.size = Vector2(520, 300)
 	overlay.add_child(box)
 	var t := Label.new()
 	t.text = TX["winTitle"]
-	t.add_theme_font_size_override("font_size", 12)
+	t.add_theme_font_size_override("font_size", 24)
 	t.add_theme_color_override("font_color", Color(0.91, 0.71, 0.29))
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(t)
@@ -580,11 +594,11 @@ func _win() -> void:
 		var l := Label.new()
 		l.text = line
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		l.add_theme_font_size_override("font_size", 7)
+		l.add_theme_font_size_override("font_size", 14)
 		box.add_child(l)
 	var again := Button.new()
 	again.text = TX["again"]
-	again.add_theme_font_size_override("font_size", 8)
+	again.add_theme_font_size_override("font_size", 16)
 	again.pressed.connect(func(): get_tree().reload_current_scene())
 	box.add_child(again)
 
@@ -708,18 +722,18 @@ func _show_start() -> void:
 	var box := VBoxContainer.new()
 	box.set_anchors_preset(Control.PRESET_FULL_RECT)
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_theme_constant_override("separation", 6)
+	box.add_theme_constant_override("separation", 12)
 	overlay.add_child(box)
 	var t := Label.new()
 	t.text = "NIGHT OF THE MUTANT CAT"
-	t.add_theme_font_size_override("font_size", 12)
+	t.add_theme_font_size_override("font_size", 24)
 	t.add_theme_color_override("font_color", Color(0.91, 0.71, 0.29))
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(t)
 	var p := Label.new()
 	p.text = "Three flatmates. One cat that drank from the fish tank.\n\nWES hacks  ·  TANK lifts  ·  DR. VIC calms"
 	p.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	p.add_theme_font_size_override("font_size", 7)
+	p.add_theme_font_size_override("font_size", 14)
 	box.add_child(p)
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -727,6 +741,6 @@ func _show_start() -> void:
 	for pair in [["PLAY IN ENGLISH", "en"], ["JUGAR EN ESPAÑOL", "es"]]:
 		var b := Button.new()
 		b.text = pair[0]
-		b.add_theme_font_size_override("font_size", 8)
+		b.add_theme_font_size_override("font_size", 16)
 		b.pressed.connect(func(): box.queue_free(); _start(pair[1]))
 		row.add_child(b)
