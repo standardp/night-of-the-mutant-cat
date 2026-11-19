@@ -151,7 +151,7 @@ func _build() -> void:
 	pf.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
 	var th := Theme.new()
 	th.default_font = pf
-	th.default_font_size = 14
+	th.default_font_size = 20
 	theme = th
 
 	# barra de personajes arriba
@@ -164,7 +164,7 @@ func _build() -> void:
 		var b := Button.new()
 		b.flat = false
 		b.focus_mode = Control.FOCUS_NONE
-		b.add_theme_font_size_override("font_size", 13)
+		b.add_theme_font_size_override("font_size", 19)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.pressed.connect(func(): _switch(who))
 		crew_bar.add_child(b)
@@ -214,12 +214,12 @@ func _build() -> void:
 	hud.offset_top = -110
 	add_child(hud)
 
-	room_lbl = _label("", 13, Color(0.65, 0.6, 0.72), Vector2(10, 0), Vector2(300, 16))
+	room_lbl = _label("", 19, Color(0.65, 0.6, 0.72), Vector2(10, 0), Vector2(300, 16))
 	room_lbl.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	room_lbl.offset_top = -108
 	room_lbl.offset_left = 10
 
-	log_lbl = _label("", 14, Color(0.91, 0.71, 0.29), Vector2(10, 0), Vector2(10, 42))
+	log_lbl = _label("", 20, Color(0.91, 0.71, 0.29), Vector2(10, 0), Vector2(10, 42))
 	log_lbl.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	log_lbl.offset_left = 10
 	log_lbl.offset_right = -10
@@ -227,7 +227,7 @@ func _build() -> void:
 	log_lbl.offset_bottom = -50
 	log_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
-	sent_lbl = _label("", 13, Color(0.75, 0.7, 0.82), Vector2(10, 0), Vector2(10, 14))
+	sent_lbl = _label("", 19, Color(0.75, 0.7, 0.82), Vector2(10, 0), Vector2(10, 14))
 	sent_lbl.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	sent_lbl.offset_left = 10
 	sent_lbl.offset_top = -46
@@ -266,7 +266,7 @@ func _build() -> void:
 	hint.offset_top = -108
 	hint.offset_right = -10
 	hint.offset_bottom = -78
-	hint.add_theme_font_size_override("font_size", 14)
+	hint.add_theme_font_size_override("font_size", 22)
 	hint.pressed.connect(_hint)
 	add_child(hint)
 
@@ -350,7 +350,7 @@ func _build_verbs() -> void:
 	for v in list:
 		var b := Button.new()
 		b.text = TX["ab"][state["cat"]] if v == ABIL[state["cat"]] else TX["verbs"][v]
-		b.add_theme_font_size_override("font_size", 13)
+		b.add_theme_font_size_override("font_size", 19)
 		b.focus_mode = Control.FOCUS_NONE
 		var sel: bool = state["verb"] == v
 		b.modulate = Color(0.55, 0.85, 0.7) if sel else Color(1, 1, 1)
@@ -586,7 +586,7 @@ func _win() -> void:
 	overlay.add_child(box)
 	var t := Label.new()
 	t.text = TX["winTitle"]
-	t.add_theme_font_size_override("font_size", 24)
+	t.add_theme_font_size_override("font_size", 30)
 	t.add_theme_color_override("font_color", Color(0.91, 0.71, 0.29))
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(t)
@@ -594,11 +594,11 @@ func _win() -> void:
 		var l := Label.new()
 		l.text = line
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		l.add_theme_font_size_override("font_size", 14)
+		l.add_theme_font_size_override("font_size", 19)
 		box.add_child(l)
 	var again := Button.new()
 	again.text = TX["again"]
-	again.add_theme_font_size_override("font_size", 16)
+	again.add_theme_font_size_override("font_size", 20)
 	again.pressed.connect(func(): get_tree().reload_current_scene())
 	box.add_child(again)
 
@@ -728,28 +728,28 @@ func _show_start() -> void:
 
 	var t := Label.new()
 	t.text = "NIGHT OF THE"
-	t.add_theme_font_size_override("font_size", 26)
+	t.add_theme_font_size_override("font_size", 30)
 	t.add_theme_color_override("font_color", Color(0.95, 0.95, 0.92))
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(t)
 
 	var t2 := Label.new()
 	t2.text = "MUTANT CAT"
-	t2.add_theme_font_size_override("font_size", 46)
+	t2.add_theme_font_size_override("font_size", 54)
 	t2.add_theme_color_override("font_color", Color(0.91, 0.71, 0.29))
 	t2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(t2)
 
 	var sub := Label.new()
 	sub.text = "THREE FLATMATES - ONE FREEZER"
-	sub.add_theme_font_size_override("font_size", 12)
+	sub.add_theme_font_size_override("font_size", 15)
 	sub.add_theme_color_override("font_color", Color(0.63, 0.58, 0.72))
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(sub)
 
 	var p2 := Label.new()
 	p2.text = "WES hacks    TANK lifts    DR. VIC calms"
-	p2.add_theme_font_size_override("font_size", 14)
+	p2.add_theme_font_size_override("font_size", 19)
 	p2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(p2)
 
@@ -760,7 +760,7 @@ func _show_start() -> void:
 	for pair in [["PLAY IN ENGLISH", "en"], ["JUGAR EN ESPANOL", "es"]]:
 		var b := Button.new()
 		b.text = pair[0]
-		b.add_theme_font_size_override("font_size", 18)
+		b.add_theme_font_size_override("font_size", 22)
 		b.custom_minimum_size = Vector2(0, 46)
 		b.pressed.connect(func(): box.queue_free(); _start(pair[1]))
 		row.add_child(b)
