@@ -28,7 +28,7 @@ body{
 .crewbtn.on .ab{color:#5a4a2a}
 .crewbtn svg{width:24px;height:30px;flex:none}
 #scene{position:relative; background:#000; border-top:3px solid #000; border-bottom:3px solid #000}
-#stage{display:block; width:100%; height:auto}
+#stage{display:block; width:100%; height:auto; image-rendering:pixelated; shape-rendering:crispEdges; background:#000}
 #stage .hs{cursor:pointer}
 #stage .hs:hover{filter:brightness(1.22)}
 #stage .glow{opacity:0; transition:opacity .12s}
@@ -75,7 +75,7 @@ body{
     <div id="roomname"></div>
   </div>
   <div id="crew"></div>
-  <div id="scene"><svg id="stage" viewBox="0 0 1000 520" preserveAspectRatio="xMidYMid meet"></svg></div>
+  <div id="scene"><svg id="stage" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid meet"></svg></div>
   <div id="log"></div>
   <div id="sentence"></div>
   <div id="verbs"></div>
@@ -297,92 +297,116 @@ const rect = (x,y,w,h,f,e="") => `<rect x="${x}" y="${y}" width="${w}" height="$
 const glow = (x,y,w,h) => `<rect class="glow" x="${x}" y="${y}" width="${w}" height="${h}" fill="#ffffff" opacity="0"/>`;
 
 function personSVG(who){
-  const torso = { wes:`${rect(10,20,14,22,"#3a5d8f")}`, tank:`${rect(7,18,20,24,"#b56a2e")}`, vic:`${rect(10,20,14,22,"#2f7d74")}` }[who];
-  const legs  = { wes:`${rect(11,42,5,12,"#2b3550")}${rect(18,42,5,12,"#2b3550")}`,
-                  tank:`${rect(8,42,7,12,"#3a3a44")}${rect(19,42,7,12,"#3a3a44")}`,
-                  vic:`${rect(11,42,5,12,"#2b3a44")}${rect(18,42,5,12,"#2b3a44")}` }[who];
-  const head  = { wes:`<circle cx="17" cy="14" r="8" fill="#e6b891"/>`, tank:`<circle cx="17" cy="13" r="9" fill="#c98d63"/>`, vic:`<circle cx="17" cy="14" r="8" fill="#e6b891"/>` }[who];
-  const hair  = { wes:`<path d="M9 12 q4 -9 16 -7 q4 2 2 6 q-8 -4 -18 1z" fill="#3a2b22"/>`,
-                  tank:`<path d="M8 10 q9 -7 18 0 q-9 -3 -18 0z" fill="#2c2c33"/>`,
-                  vic:`<path d="M9 11 q8 -8 16 0 q-8 -3 -16 0z" fill="#4a2f22"/><circle cx="17" cy="6" r="4" fill="#4a2f22"/>` }[who];
-  return `${legs}${torso}${head}${hair}${rect(14,13,2,2,"#1b1b22")}${rect(19,13,2,2,"#1b1b22")}${rect(8,38,4,6,"#e6b891")}${rect(22,38,4,6,"#e6b891")}`;
+  const P = { wes:["#2f4a72","#1f2c44","#e0b389","#2a1d16"], tank:["#a85f27","#33333c","#c98d63","#22222a"], vic:["#2b6f67","#243b3c","#e0b389","#3f271b"] };
+  const [shirt, trouser, skin, hair] = P[who];
+  const wide = who==="tank";
+  const L = wide ? 1 : 2, R = wide ? 6 : 5;
+  let s = "";
+  // legs
+  s += rect(L,18,2,4,trouser) + rect(R,18,2,4,trouser);
+  s += rect(L-1,21,3,1,"#111016") + rect(R-1,21,3,1,"#111016");
+  // torso
+  s += rect(wide?1:2,8,wide?8:6,10,shirt);
+  // arms
+  s += rect(wide?0:1,9,1,6,shirt) + rect(wide?9:7,9,1,6,shirt);
+  s += rect(wide?0:1,15,1,1,skin) + rect(wide?9:7,15,1,1,skin);
+  // head
+  s += rect(wide?2:3,3,wide?6:4,5,skin);
+  // hair
+  s += rect(wide?2:3,2,wide?6:4,1,hair);
+  if(who==="vic") s += rect(6,2,1,3,hair);
+  // eyes
+  s += rect(wide?3:4,5,1,1,"#141018") + rect(wide?6:5,5,1,1,"#141018");
+  return s;
 }
 
 /* ======================= ROOMS ======================= */
 const ROOMS = {
   living:{ exits:{doorL:"hall"}, hotspots:[
-    {id:"tank",b:[250,296,190,50]},
-    {id:"beast",b:[286,176,116,126]},
-    {id:"sofa",b:[60,282,250,110]},
-    {id:"laptop",b:[392,322,70,34]},
-    {id:"vacuum",b:[610,356,60,44]},
-    {id:"doorL",b:[860,180,110,180],walk:true} ],
-    art:()=>`${rect(0,0,1000,520,"#2a2030")}${rect(0,300,1000,220,"#3a2b34")}${rect(0,286,1000,14,"#4b3743")}
-      ${rect(70,80,150,100,"#4a3b52")}${rect(80,90,130,80,"#6d5a7a")}
-      <text x="145" y="140" text-anchor="middle" font-family="Courier New" font-size="13" fill="#2a2030">NICE FLAT</text>
-      ${rect(690,70,190,130,"#1b2740")}${rect(700,80,170,110,"#3f6fa8")}${rect(784,80,4,110,"#1b2740")}${rect(700,132,170,4,"#1b2740")}
-      <g>${rect(250,225,190,120,"#20303c")}${rect(258,233,174,104,"#2e5566")}${rect(258,233,174,14,"#3d6d80")}
-        ${state.catInKitchen?"":`<path d="M300 337 q-6 -46 20 -66 q26 -20 12 -46" stroke="#c9a06a" stroke-width="15" fill="none" stroke-linecap="round"/>
-        <circle cx="332" cy="212" r="17" fill="#dcb37c"/>
-        <polygon points="320,200 318,182 334,194" fill="#dcb37c"/><polygon points="344,200 350,183 356,199" fill="#dcb37c"/>
-        <circle cx="326" cy="210" r="3.4" fill="#22301f"/><circle cx="339" cy="210" r="3.4" fill="#22301f"/>
-        <path d="M330 220 q4 4 8 0" stroke="#8d6a44" stroke-width="2" fill="none"/>`}
-        <ellipse cx="300" cy="322" rx="16" ry="8" fill="#d98b3f"/><ellipse cx="368" cy="330" rx="12" ry="6" fill="#c7b26a"/>
-        ${rect(246,222,198,8,"#16222b")}</g>
-      <g>${rect(60,300,250,90,"#5a3f4d")}${rect(70,282,230,34,"#6b4a5b")}${rect(78,318,40,64,"#6b4a5b")}${rect(252,318,40,64,"#6b4a5b")}</g>
-      ${rect(360,352,150,12,"#6b4a33")}${rect(370,364,8,40,"#5a3e29")}${rect(492,364,8,40,"#5a3e29")}
-      ${rect(395,326,64,26,"#8d8d99")}${rect(401,331,52,16,"#2b3a4d")}${rect(392,350,70,5,"#a3a3ae")}
-      <ellipse cx="640" cy="386" rx="30" ry="12" fill="#39323f"/><rect x="622" y="360" width="36" height="24" rx="8" fill="#4a4152"/><circle cx="640" cy="372" r="5" fill="${state.vacuumOn?"#8ef0c4":"#5c5468"}"/>
-      ${rect(860,180,110,180,"#4a3327")}${rect(872,192,86,156,"#5f4331")}<circle cx="946" cy="272" r="5" fill="#d8b25c"/>`
+    {id:"tank",b:[78,100,62,30]},
+    {id:"beast",b:[86,34,54,70]},
+    {id:"sofa",b:[8,118,92,42]},
+    {id:"laptop",b:[126,136,26,16]},
+    {id:"vacuum",b:[203,163,28,20]},
+    {id:"doorL",b:[282,55,36,78],walk:true} ],
+    art:()=>`${rect(0,0,320,120,"#2b1b3d")}${rect(0,0,320,6,"#1c1128")}
+      ${rect(0,118,320,82,"#4a2f3d")}${rect(0,118,320,2,"#593a4a")}
+      ${[0,1,2].map(i=>rect(0,140+i*20,320,1,"#553646")).join("")}
+      ${rect(20,18,52,34,"#3d2a52")}${rect(24,22,44,26,"#5b4074")}
+      ${rect(28,30,36,1,"#2b1b3d")}${rect(28,36,28,1,"#2b1b3d")}
+      ${rect(215,14,86,58,"#241a33")}${rect(219,18,78,50,"#3f6fa8")}
+      ${rect(219,18,78,16,"#4d80bd")}${rect(256,18,2,50,"#241a33")}${rect(219,42,78,2,"#241a33")}
+      ${rect(300,16,1,54,"#6d4a5c")}
+      <g>${rect(78,62,62,66,"#1c2b30")}${rect(82,66,54,58,"#356f6a")}${rect(82,66,54,8,"#2f5a63")}
+        ${state.catInKitchen?"":`${rect(112,96,6,22,"#b98a54")}${rect(100,72,26,20,"#b98a54")}${rect(100,72,26,4,"#a97c47")}
+          ${rect(101,60,10,10,"#d4a86e")}${rect(101,58,3,3,"#c9955f")}${rect(108,58,3,3,"#c9955f")}
+          ${rect(103,63,1,1,"#1e2a1c")}${rect(107,63,1,1,"#1e2a1c")}${rect(104,66,3,1,"#8d6a44")}
+          ${rect(112,110,3,8,"#8d6a44")}`}
+        ${rect(92,112,6,3,"#d98b3f")}${rect(122,116,5,2,"#c7b26a")}
+      </g>${rect(76,60,66,4,"#121c21")}
+      <g>${rect(8,140,92,20,"#6d4a5c")}${rect(8,118,92,22,"#7d5768")}${rect(8,132,6,28,"#8a6274")}${rect(94,132,6,28,"#8a6274")}
+        ${rect(12,124,84,4,"#94596e")}</g>
+      ${rect(112,150,58,4,"#6b4a2e")}${rect(114,154,3,12,"#4f3722")}${rect(165,154,3,12,"#4f3722")}
+      ${rect(126,138,24,12,"#8f96a0")}${rect(129,140,18,8,"#2b3a4d")}${rect(125,150,26,2,"#a9b0b8")}
+      ${rect(203,172,26,6,"#3a3444")}${rect(207,163,18,10,"#4d4658")}${rect(213,167,4,3,state.vacuumOn?"#8ef0c4":"#5c5468")}
+      ${rect(282,55,36,75,"#4a3327")}${rect(285,58,30,69,"#6b4a2e")}${rect(308,92,2,4,"#d8b25c")}`
   },
   hall:{ exits:{doorLiv:"living",doorKit:"kitchen",doorBath:"bathroom"}, hotspots:[
-    {id:"fuse",b:[588,84,92,72]},
-    {id:"doorLiv",b:[40,170,120,190],walk:true},
-    {id:"doorKit",b:[420,170,120,190],walk:true},
-    {id:"doorBath",b:[790,170,120,190],walk:true} ],
-    art:()=>`${rect(0,0,1000,520,"#221b28")}${rect(0,300,1000,220,"#33262f")}${rect(0,286,1000,14,"#43323c")}
-      ${rect(40,170,120,190,"#4a3327")}${rect(52,182,96,166,"#5f4331")}<circle cx="132" cy="266" r="5" fill="#d8b25c"/>
-      ${rect(420,170,120,190,"#4a3327")}${rect(432,182,96,166,"#5f4331")}<circle cx="512" cy="266" r="5" fill="#d8b25c"/>
-      ${rect(790,170,120,190,"#3d5a63")}${rect(802,182,96,166,"#4e7079")}<circle cx="882" cy="266" r="5" fill="#cfe6ea"/>
-      ${rect(590,86,86,64,"#5c5c66")}${rect(598,94,70,48,"#7c7c88")}
-      <circle cx="616" cy="112" r="7" fill="${state.power?"#5fbf7a":"#3f6b4a"}"/><circle cx="640" cy="112" r="7" fill="#7a3f3f"/><circle cx="664" cy="112" r="7" fill="#3f4b6b"/>
-      ${rect(610,128,50,6,"#4a4a54")}${rect(560,150,146,6,"#4a4152")}
-      <text x="633" y="166" text-anchor="middle" font-family="Courier New" font-size="10" fill="#8d7fa0">${state.power?"ON":"OFF"}</text>`
+    {id:"fuse",b:[180,20,38,36]},
+    {id:"doorLiv",b:[12,45,40,92],walk:true},
+    {id:"doorKit",b:[130,45,40,92],walk:true},
+    {id:"doorBath",b:[260,45,40,92],walk:true} ],
+    art:()=>`${rect(0,0,320,118,"#241b2e")}${rect(0,0,320,6,"#171020")}
+      ${rect(0,118,320,82,"#3d2c38")}${rect(0,118,320,2,"#4a3644")}
+      ${rect(0,150,320,1,"#4a3644")}${rect(0,175,320,1,"#4a3644")}
+      ${rect(12,45,40,92,"#4a3327")}${rect(15,48,34,86,"#6b4a2e")}${rect(44,88,2,4,"#d8b25c")}
+      ${rect(130,45,40,92,"#4a3327")}${rect(133,48,34,86,"#6b4a2e")}${rect(162,88,2,4,"#d8b25c")}
+      ${rect(260,45,40,92,"#2c4a4f")}${rect(263,48,34,86,"#3f6b70")}${rect(292,88,2,4,"#cfe6ea")}
+      ${rect(180,22,38,30,"#3c3c46")}${rect(184,26,30,22,"#6e6e7a")}
+      ${rect(188,32,5,5,state.power?"#5fbf7a":"#2f5440")}${rect(196,32,5,5,"#6d3a3a")}${rect(204,32,5,5,"#3a4468")}
+      ${rect(186,42,26,2,"#4a4a54")}
+      ${rect(172,54,52,2,"#4a3644")}
+      ${rect(96,160,30,3,"#4a3644")}${rect(210,168,24,2,"#4a3644")}`
   },
   kitchen:{ exits:{doorHall:"hall"}, hotspots:[
-    {id:"pantry",b:[60,120,120,140]},
-    {id:"freezer",b:[598,268,234,94]},
-    {id:"sink",b:[300,238,90,48]},
-    {id:"doorHall",b:[856,180,110,180],walk:true} ],
-    art:()=>`${rect(0,0,1000,520,"#1f2a26")}${rect(0,300,1000,220,"#2d3a34")}${rect(0,286,1000,14,"#3a4a43")}
-      ${rect(0,250,1000,36,"#4a5a52")}
-      ${rect(60,120,120,130,"#54382a")}${rect(70,130,100,110,"#6b4835")}${rect(114,130,12,110,"#4a3024")}
-      <text x="120" y="266" text-anchor="middle" font-family="Courier New" font-size="10" fill="#8d7fa0">PANTRY</text>
-      ${rect(600,270,230,90,"#8fa8b8")}${rect(608,278,214,20,"#c3d6e2")}${rect(608,304,214,48,state.freezerOpen?"#cfe6f2":"#a8c0ce")}
-      <rect x="690" y="284" width="60" height="8" rx="3" fill="#5d7484"/>
-      ${state.freezerOpen?"":`<path d="M608 300 q40 -10 80 0 q40 10 80 0 q30 -8 54 0" stroke="#dff0f8" stroke-width="7" fill="none"/>`}
-      <text x="715" y="376" text-anchor="middle" font-family="Courier New" font-size="10" fill="#8d7fa0">FREEZER</text>
-      ${state.catInKitchen?`<g><ellipse cx="470" cy="392" rx="58" ry="26" fill="#c9a06a"/><circle cx="404" cy="366" r="34" fill="#dcb37c"/>
-        <polygon points="376,344 372,306 404,332" fill="#dcb37c"/><polygon points="424,340 438,306 448,340" fill="#dcb37c"/>
-        <circle cx="392" cy="362" r="5" fill="#2b2118"/><circle cx="418" cy="362" r="5" fill="#2b2118"/>
-        <path d="M400 380 q8 6 16 0" stroke="#8d6a44" stroke-width="2.5" fill="none"/></g>`:""}
-      ${rect(300,238,90,48,"#6b7c85")}${rect(310,248,70,28,"#41525c")}
-      ${rect(856,180,110,180,"#4a3327")}${rect(868,192,86,156,"#5f4331")}<circle cx="942" cy="272" r="5" fill="#d8b25c"/>`
+    {id:"pantry",b:[20,40,38,66]},
+    {id:"freezer",b:[198,104,94,44]},
+    {id:"sink",b:[100,92,32,20]},
+    {id:"doorHall",b:[278,50,38,80],walk:true} ],
+    art:()=>`${rect(0,0,320,118,"#1e2a26")}${rect(0,0,320,6,"#131e1a")}
+      ${rect(0,118,320,82,"#2d3a34")}${rect(0,118,320,2,"#3a4a43")}
+      ${[0,1,2].map(i=>rect(0,140+i*20,320,1,"#364640")).join("")}
+      ${rect(0,100,320,14,"#44544c")}${rect(0,114,320,3,"#2a3630")}
+      ${rect(20,40,38,60,"#4a3024")}${rect(23,43,32,54,"#6b4835")}${rect(37,43,4,54,"#3a2419")}
+      ${rect(30,80,2,4,"#c9a06a")}
+      ${rect(200,108,90,37,"#7f97a7")}${rect(203,111,84,12,"#c3d6e2")}${rect(203,124,84,18,state.freezerOpen?"#cfe6f2":"#9fb8c6")}
+      ${rect(232,114,24,4,"#5d7484")}
+      ${state.freezerOpen?"":`${rect(203,124,84,2,"#e8f4fa")}${rect(210,127,70,1,"#e8f4fa")}`}
+      ${state.catInKitchen?`<g>${rect(150,132,34,22,"#b98a54")}${rect(150,132,34,4,"#a97c47")}
+        ${rect(146,124,14,12,"#d4a86e")}${rect(146,120,4,4,"#c9955f")}${rect(155,120,4,4,"#c9955f")}
+        ${rect(149,128,1,1,"#1e2a1c")}${rect(154,128,1,1,"#1e2a1c")}${rect(151,131,2,1,"#8d6a44")}
+        ${rect(184,120,4,10,"#b98a54")}${rect(186,116,4,4,"#b98a54")}</g>`:""}
+      ${rect(100,96,32,10,"#6b7c85")}${rect(104,99,24,6,"#41525c")}${rect(114,90,3,7,"#9fb0bd")}
+      ${rect(278,50,38,80,"#4a3327")}${rect(281,53,32,74,"#6b4a2e")}${rect(306,86,2,4,"#d8b25c")}`
   },
   bathroom:{ exits:{doorHall:"hall"}, hotspots:[
-    {id:"dryer",b:[196,240,90,36]},
-    {id:"outlet",b:[338,208,44,38]},
-    {id:"mirror",b:[358,88,194,114]},
-    {id:"tub",b:[620,250,240,80]},
-    {id:"doorHall",b:[60,170,110,180],walk:true} ],
-    art:()=>`${rect(0,0,1000,520,"#1e2530")}${rect(0,300,1000,220,"#2b3542")}
-      ${[0,1,2,3,4,5,6,7].map(i=>rect(0,60+i*30,1000,2,"#2a3340")).join("")}
-      ${rect(360,90,190,110,"#4a5a6b")}${rect(370,100,170,90,"#6e8497")}
-      ${rect(390,230,130,40,"#7d8f9e")}${rect(400,240,110,22,"#4d6070")}${rect(450,214,12,20,"#9fb0bd")}
-      ${state.taken.dryer?`${rect(200,258,12,10,"#3a2f47")}`:`${rect(210,250,54,18,"#d9503f")}${rect(258,246,26,26,"#b8422f")}${rect(196,254,18,10,"#3a2f47")}<path d="M196 258 q-26 6 -10 -14" stroke="#3a2f47" stroke-width="4" fill="none"/>`}
-      ${rect(620,250,240,80,"#8fa0ad")}${rect(628,258,224,56,"#c6d4dd")}
-      ${rect(340,210,40,34,"#5c6b78")}${rect(348,218,8,10,"#2b3542")}${rect(362,218,8,10,"#2b3542")}
-      ${rect(60,170,110,190,"#4a3327")}${rect(72,182,86,166,"#5f4331")}<circle cx="148" cy="266" r="5" fill="#d8b25c"/>`
+    {id:"dryer",b:[64,94,32,14]},
+    {id:"outlet",b:[106,86,22,16]},
+    {id:"mirror",b:[118,20,64,44]},
+    {id:"tub",b:[208,98,90,44]},
+    {id:"doorHall",b:[20,50,38,80],walk:true} ],
+    art:()=>`${rect(0,0,320,118,"#1c2531")}${rect(0,0,320,6,"#121a24")}
+      ${[0,1,2,3,4,5,6].map(i=>rect(0,20+i*16,320,1,"#243040")).join("")}
+      ${[0,1,2,3].map(i=>rect(i*80,20,1,98,"#243040")).join("")}
+      ${rect(0,118,320,82,"#2b3542")}${rect(0,118,320,2,"#37424f")}
+      ${rect(118,20,64,44,"#3d4b5a")}${rect(122,24,56,36,"#5d7386")}${rect(150,24,1,36,"#42525f")}
+      ${rect(130,92,38,12,"#7d8f9e")}${rect(134,95,30,7,"#46596a")}${rect(146,86,3,7,"#9fb0bd")}
+      ${state.taken.dryer
+        ? `${rect(66,102,20,4,"#3a2f47")}${rect(60,102,6,2,"#3a2f47")}`
+        : `${rect(66,96,20,8,"#c1443a")}${rect(84,94,8,12,"#a83a31")}${rect(62,98,4,4,"#3a2f47")}${rect(56,100,6,2,"#3a2f47")}`}
+      ${rect(210,100,86,40,"#7f8f9c")}${rect(214,104,78,32,"#c6d4dd")}${rect(214,104,78,3,"#e2eaf0")}
+      ${rect(108,88,20,14,"#4a5866")}${rect(112,92,5,5,"#1c2531")}${rect(119,92,5,5,"#1c2531")}
+      ${rect(20,50,38,80,"#4a3327")}${rect(23,53,32,74,"#6b4a2e")}${rect(48,86,2,4,"#d8b25c")}`
   }
 };
 
@@ -453,7 +477,7 @@ function renderScene(){
     const g = document.createElementNS("http://www.w3.org/2000/svg","g");
     g.setAttribute("id","actor");
     g.setAttribute("pointer-events","none");
-    g.setAttribute("transform",`translate(${state.room==="living"?470:620},436) scale(1.45)`);
+    g.setAttribute("transform",`translate(${state.room==="living"?150:200},154) scale(1.15)`);
     g.innerHTML = personSVG(state.cat);
     stage.appendChild(g);
   }
@@ -473,9 +497,9 @@ function renderScene(){
 function walkTo(e){
   const g = el("actor"); if(!g) return;
   const r = stage.getBoundingClientRect();
-  const x = Math.max(50, Math.min(940, (e.clientX-r.left)/r.width*1000));
+  const x = Math.max(16, Math.min(296, (e.clientX-r.left)/r.width*320));
   g.style.transition = "transform .3s";
-  g.setAttribute("transform",`translate(${x},436) scale(1.45)`);
+  g.setAttribute("transform",`translate(${x},154) scale(1.15)`);
 }
 
 const renderAll = () => { if(!state.started) return; renderCrew(); renderVerbs(); renderInv(); renderSentence(); renderScene(); };
