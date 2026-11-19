@@ -10,14 +10,14 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 [display]
 
 window/size/viewport_width=320
-window/size/viewport_height=200
-window/size/window_width_override=960
-window/size/window_height_override=600
+window/size/viewport_height=260
+window/size/window_width_override=1120
+window/size/window_height_override=910
 window/stretch/mode="canvas_items"
-window/stretch/aspect="keep"
+window/stretch/aspect="expand"
 
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0
 renderer/rendering_method="gl_compatibility"
-environment/defaults/default_clear_color=Color(0.05, 0.04, 0.06, 1)
+environment/defaults/default_clear_color=Color(0.04, 0.03, 0.05, 1)

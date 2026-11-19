@@ -6,15 +6,20 @@ const ABIL := {"wes": "HACK", "tank": "LIFT", "vic": "CALM"}
 
 const TEX := {
 	"living_default": preload("res://assets/living_default.png"),
-	"living_catgone": preload("res://assets/living_catgone.png"),
 	"hall_off": preload("res://assets/hall_off.png"),
 	"hall_on": preload("res://assets/hall_on.png"),
 	"kitchen_default": preload("res://assets/kitchen_default.png"),
 	"kitchen_open": preload("res://assets/kitchen_open.png"),
-	"kitchen_cat": preload("res://assets/kitchen_cat.png"),
 	"bathroom_dryer": preload("res://assets/bathroom_dryer.png"),
 	"bathroom_nodryer": preload("res://assets/bathroom_nodryer.png"),
 }
+
+const ICON := {
+	"dryer": preload("res://assets/icon_dryer.png"),
+	"tuna": preload("res://assets/icon_tuna.png"),
+}
+
+const CAT_TEX := preload("res://assets/cat.png")
 
 const SPR := {
 	"wes": preload("res://assets/spr_wes.png"),
@@ -74,8 +79,11 @@ var state := {
 
 var TX := {}
 
-var bg: TextureRect
+var bg: Sprite2D
 var actor: Sprite2D
+var cat_spr: Sprite2D
+var stage: Control
+var world: Node2D
 var spot_layer: Control
 var log_lbl: Label
 var sent_lbl: Label
@@ -88,20 +96,26 @@ var room_lbl: Label
 
 func _ready() -> void:
 	TX = _texts()
+	if not OS.has_feature("web"):
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	_build()
+	_layout()
 	_refresh()
 	_show_start()
 	if "--solve" in OS.get_cmdline_user_args():
 		_solve()
 
 func _solve() -> void:
-	await get_tree().process_frame
+	await get_tree().create_timer(0.5).timeout
 	_start("es")
+	await get_tree().create_timer(0.4).timeout
 	_switch("tank")
 	_fuse()
+	await get_tree().create_timer(0.3).timeout
 	_go("bathroom")
 	_dryer()
 	_go("kitchen")
+	await get_tree().create_timer(0.4).timeout
 	_pantry()
 	_open_tuna()
 	state["item"] = "dryer"
@@ -123,75 +137,123 @@ func _solve() -> void:
 # ---------------------------------------------------------------- layout
 func _build() -> void:
 	var clear := ColorRect.new()
-	clear.color = Color(0.05, 0.04, 0.06)
+	clear.color = Color(0.04, 0.03, 0.05)
 	clear.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(clear)
 
-	bg = TextureRect.new()
+	# barra de personajes arriba
+	crew_bar = HBoxContainer.new()
+	crew_bar.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	crew_bar.offset_bottom = 16
+	crew_bar.add_theme_constant_override("separation", 3)
+	add_child(crew_bar)
+	for who in ["wes", "tank", "vic"]:
+		var b := Button.new()
+		b.flat = false
+		b.focus_mode = Control.FOCUS_NONE
+		b.add_theme_font_size_override("font_size", 7)
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.pressed.connect(func(): _switch(who))
+		crew_bar.add_child(b)
+
+	# escenario
+	stage = Control.new()
+	stage.anchor_right = 1.0
+	stage.anchor_bottom = 1.0
+	stage.offset_top = 18
+	stage.offset_bottom = -62
+	stage.clip_contents = true
+	add_child(stage)
+	stage.resized.connect(_layout)
+
+	world = Node2D.new()
+	stage.add_child(world)
+
+	bg = Sprite2D.new()
 	bg.texture = TEX["living_default"]
-	bg.position = Vector2.ZERO
-	bg.size = Vector2(320, 200)
+	bg.centered = false
 	bg.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	bg.stretch_mode = TextureRect.STRETCH_SCALE
-	add_child(bg)
+	world.add_child(bg)
+
+	cat_spr = Sprite2D.new()
+	cat_spr.texture = CAT_TEX
+	cat_spr.centered = false
+	cat_spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	cat_spr.visible = false
+	world.add_child(cat_spr)
 
 	spot_layer = Control.new()
 	spot_layer.size = Vector2(320, 200)
-	add_child(spot_layer)
+	spot_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	world.add_child(spot_layer)
 
 	actor = Sprite2D.new()
 	actor.texture = SPR["wes"]
 	actor.centered = false
 	actor.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	actor.position = Vector2(150, 120)
-	actor.scale = Vector2(0.9, 0.9)
-	add_child(actor)
+	actor.position = Vector2(150, 128)
+	world.add_child(actor)
 
-	# HUD
+	# HUD abajo
 	var hud := ColorRect.new()
-	hud.color = Color(0.09, 0.07, 0.12, 0.94)
-	hud.position = Vector2(0, 148)
-	hud.size = Vector2(320, 52)
+	hud.color = Color(0.10, 0.08, 0.13)
+	hud.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	hud.offset_top = -60
 	add_child(hud)
 
-	room_lbl = _label("", 7, Color(0.65, 0.6, 0.72), Vector2(4, 150), Vector2(150, 8))
-	log_lbl = _label("", 8, Color(0.91, 0.71, 0.29), Vector2(4, 159), Vector2(312, 20))
-	log_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	sent_lbl = _label("", 7, Color(0.75, 0.7, 0.82), Vector2(4, 179), Vector2(312, 8))
+	room_lbl = _label("", 8, Color(0.65, 0.6, 0.72), Vector2(6, 0), Vector2(200, 10))
+	room_lbl.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	room_lbl.offset_top = -58
+	room_lbl.offset_left = 6
 
-	verb_bar = HBoxContainer.new()
-	verb_bar.position = Vector2(4, 189)
-	verb_bar.add_theme_constant_override("separation", 2)
-	add_child(verb_bar)
+	log_lbl = _label("", 10, Color(0.91, 0.71, 0.29), Vector2(6, 0), Vector2(10, 26))
+	log_lbl.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	log_lbl.offset_left = 6
+	log_lbl.offset_right = -6
+	log_lbl.offset_top = -48
+	log_lbl.offset_bottom = -22
+	log_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+
+	sent_lbl = _label("", 9, Color(0.75, 0.7, 0.82), Vector2(6, 0), Vector2(10, 10))
+	sent_lbl.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	sent_lbl.offset_left = 6
+	sent_lbl.offset_top = -20
+	sent_lbl.offset_bottom = -10
 
 	inv_bar = HBoxContainer.new()
-	inv_bar.position = Vector2(4, 138)
-	inv_bar.add_theme_constant_override("separation", 2)
+	inv_bar.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	inv_bar.offset_left = 6
+	inv_bar.offset_top = -108
+	inv_bar.add_theme_constant_override("separation", 3)
 	add_child(inv_bar)
 
 	meter = ProgressBar.new()
-	meter.position = Vector2(250, 138)
-	meter.size = Vector2(66, 4)
+	meter.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	meter.offset_left = -70
+	meter.offset_top = -108
+	meter.offset_right = -6
+	meter.offset_bottom = -102
 	meter.max_value = 100
 	meter.show_percentage = false
 	add_child(meter)
 
-	crew_bar = HBoxContainer.new()
-	crew_bar.position = Vector2(232, 189)
-	crew_bar.add_theme_constant_override("separation", 2)
-	add_child(crew_bar)
-	for who in ["wes", "tank", "vic"]:
-		var b := Button.new()
-		b.custom_minimum_size = Vector2(28, 9)
-		b.add_theme_font_size_override("font_size", 6)
-		b.pressed.connect(func(): _switch(who))
-		crew_bar.add_child(b)
+	verb_bar = HBoxContainer.new()
+	verb_bar.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	verb_bar.offset_left = 200
+	verb_bar.offset_top = -18
+	verb_bar.offset_bottom = -2
+	verb_bar.alignment = BoxContainer.ALIGNMENT_END
+	verb_bar.add_theme_constant_override("separation", 3)
+	add_child(verb_bar)
 
 	var hint := Button.new()
 	hint.text = "?"
-	hint.position = Vector2(4, 150)
-	hint.size = Vector2(10, 8)
-	hint.add_theme_font_size_override("font_size", 6)
+	hint.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	hint.offset_left = -26
+	hint.offset_top = -58
+	hint.offset_right = -6
+	hint.offset_bottom = -44
+	hint.add_theme_font_size_override("font_size", 8)
 	hint.pressed.connect(_hint)
 	add_child(hint)
 
@@ -199,6 +261,16 @@ func _build() -> void:
 	overlay.color = Color(0.03, 0.02, 0.04, 0.96)
 	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(overlay)
+
+func _layout() -> void:
+	if not is_instance_valid(world) or stage == null:
+		return
+	var s := maxf(stage.size.x / 320.0, stage.size.y / 200.0)
+	world.scale = Vector2(s, s)
+	world.position = Vector2(
+		(stage.size.x - 320.0 * s) * 0.5,
+		(stage.size.y - 200.0 * s) * 0.5
+	)
 
 func _label(txt: String, size: int, col: Color, pos: Vector2, sz: Vector2) -> Label:
 	var l := Label.new()
@@ -219,6 +291,13 @@ func _refresh() -> void:
 		actor.texture = SPR[state["cat"]]
 	else:
 		actor.visible = false
+	cat_spr.visible = false
+	if state["cat_kitchen"] and state["room"] == "kitchen":
+		cat_spr.visible = true
+		cat_spr.position = Vector2(120, 106)
+	elif not state["cat_kitchen"] and state["room"] == "living":
+		cat_spr.visible = true
+		cat_spr.position = Vector2(78, 52)
 	_build_spots()
 	_say(TX["rooms"][state["room"]]["d"])
 	_build_verbs()
@@ -227,13 +306,9 @@ func _refresh() -> void:
 
 func _bg_for(r: String) -> Texture2D:
 	match r:
-		"living":
-			return TEX["living_catgone"] if state["cat_kitchen"] else TEX["living_default"]
 		"hall":
 			return TEX["hall_on"] if state["power"] else TEX["hall_off"]
 		"kitchen":
-			if state["cat_kitchen"]:
-				return TEX["kitchen_cat"]
 			return TEX["kitchen_open"] if state["freezer_open"] else TEX["kitchen_default"]
 		"bathroom":
 			return TEX["bathroom_nodryer"] if state["taken"].has("dryer") else TEX["bathroom_dryer"]
@@ -278,12 +353,13 @@ func _build_inv() -> void:
 		c.queue_free()
 	for it in state["taken"].keys():
 		var b := Button.new()
-		b.text = TX["hs"].get(it, it).substr(0, 3)
-		b.custom_minimum_size = Vector2(26, 9)
-		b.add_theme_font_size_override("font_size", 6)
+		b.icon = ICON.get(it, null)
+		b.expand_icon = true
+		b.custom_minimum_size = Vector2(26, 26)
+		b.tooltip_text = TX["hs"].get(it, it)
 		b.focus_mode = Control.FOCUS_NONE
 		if state["item"] == it:
-			b.modulate = Color(0.37, 0.82, 0.66)
+			b.modulate = Color(0.45, 1.0, 0.8)
 		b.pressed.connect(func(): _tap_item(it))
 		inv_bar.add_child(b)
 

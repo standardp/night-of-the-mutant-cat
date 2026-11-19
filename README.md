@@ -33,3 +33,8 @@ The Godot build runs with `godot --path godot/` once the engine is installed. Ex
 
 - The art is original, drawn on a 320x200 grid with a 46-colour palette. Same era and resolution as the games it parodies, not a copy of their assets.
 - Made as a joke. The cat is fine.
+
+## Credits
+
+- Cat sprite: *Cat Sprites* by Master484, CC0, opengameart.org/content/cat-sprites (recoloured and scaled)
+- Everything else: drawn for this project
