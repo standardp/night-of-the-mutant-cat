@@ -12,7 +12,8 @@ Nobody can do anyone else's job. That is the whole game.
 
 ## Play
 
-**Browser, no download:** https://standardp.github.io/night-of-the-mutant-cat/
+**Browser, vanilla build:** https://standardp.github.io/night-of-the-mutant-cat/
+**Browser, Godot build:** https://standardp.github.io/night-of-the-mutant-cat/play/
 Also available in Spanish — pick the language on the title screen.
 
 ## Controls
