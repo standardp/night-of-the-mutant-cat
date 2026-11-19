@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Night of the Mutant Cat</title>
+<style>
+:root{
+  --ink:#141018; --panel:#241d2b; --gold:#e8b44a; --red:#d9503f;
+  --mint:#5fd0a8; --paper:#f3ead9;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:#0d0a10; color:var(--paper);
+  font-family:"Courier New",monospace; font-size:14px;
+  display:flex; align-items:center; justify-content:center; padding:12px;
+}
+#game{
+  width:min(1000px,100%); background:var(--panel);
+  border:3px solid #000; box-shadow:0 0 0 3px #3b3049, 0 18px 50px #000a;
+  display:flex; flex-direction:column;
+}
+#topbar{
+  display:flex; align-items:center; gap:10px; padding:8px 10px;
+  background:linear-gradient(#332a3d,#241d2b); border-bottom:3px solid #000;
+}
+#title{font-weight:bold; letter-spacing:2px; color:var(--gold); font-size:13px; white-space:nowrap}
+#title small{display:block; color:#8d7fa0; letter-spacing:1px; font-size:9px; font-weight:normal}
+#roomname{margin-left:auto; color:#a99cbb; font-size:11px; letter-spacing:2px}
+#hintBtn{
+  background:#3a2f47; color:var(--gold); border:2px solid #000; cursor:pointer;
+  font-family:inherit; font-size:11px; padding:4px 8px; font-weight:bold;
+}
+#hintBtn:hover{background:#4a3c59}
+#crew{display:flex; gap:6px; padding:6px 10px 0; background:#1b1522}
+.crewbtn{
+  flex:1; display:flex; align-items:center; gap:8px; cursor:pointer;
+  background:#241d2b; border:2px solid #000; border-bottom:none; padding:5px 8px;
+  color:#a99cbb; font-family:inherit; font-size:11px; text-align:left;
+}
+.crewbtn .nm{font-weight:bold; letter-spacing:1px}
+.crewbtn .ab{display:block; font-size:9px; color:#7d6f90}
+.crewbtn.on{background:var(--gold); color:#221b2b}
+.crewbtn.on .ab{color:#5a4a2a}
+.crewbtn svg{width:24px;height:30px;flex:none}
+
+#scene{position:relative; background:#000; border-top:3px solid #000; border-bottom:3px solid #000}
+#stage{display:block; width:100%; height:auto}
+#stage .hs{cursor:pointer}
+#stage .hs:hover{filter:brightness(1.25)}
+#stage .glow{opacity:0; transition:opacity .12s}
+#stage .hs:hover .glow{opacity:.55}
+
+#log{
+  min-height:44px; padding:7px 12px; background:#1b1522; color:var(--gold);
+  border-bottom:3px solid #000; font-size:12.5px; line-height:1.35;
+}
+#sentence{padding:6px 12px; background:#120e17; color:#cdbfdd; font-size:12px; min-height:26px}
+#sentence b{color:var(--gold)}
+
+#verbs{display:flex; flex-wrap:wrap; gap:5px; padding:8px 10px; background:#241d2b}
+.verb{
+  background:#372c45; color:var(--paper); border:2px solid #000; cursor:pointer;
+  font-family:inherit; font-size:11px; font-weight:bold; padding:6px 9px; letter-spacing:1px;
+}
+.verb:hover{background:#4a3c59}
+.verb.sel{background:var(--gold); color:#221b2b}
+.verb.ability{background:#33455c}
+.verb.ability.sel{background:var(--mint); color:#10221b}
+
+#bottom{display:flex; gap:10px; padding:8px 10px 10px; background:#1b1522; border-top:3px solid #000}
+#invwrap{flex:1}
+#invlabel{font-size:9px; color:#7d6f90; letter-spacing:2px; margin-bottom:4px}
+#inv{display:flex; flex-wrap:wrap; gap:6px; min-height:48px}
+.slot{
+  width:48px;height:48px;background:#241d2b;border:2px solid #000;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.slot:hover{border-color:var(--gold)}
+.slot.sel{border-color:var(--mint); box-shadow:0 0 0 2px var(--mint) inset}
+.slot svg{width:32px;height:32px}
+#meter{width:150px; text-align:right; font-size:10px; color:#7d6f90}
+#bar{height:9px; background:#241d2b; border:2px solid #000; margin-top:5px; overflow:hidden}
+#barfill{height:100%; width:0%; background:linear-gradient(90deg,var(--mint),var(--gold),var(--red)); transition:width .4s}
+
+#overlay{position:fixed; inset:0; background:#050409ee; display:none; align-items:center; justify-content:center; padding:20px; z-index:9}
+#overlay.on{display:flex}
+#card{max-width:560px; background:var(--panel); border:3px solid var(--gold); padding:26px; text-align:center; box-shadow:0 0 0 4px #000}
+#card h1{margin:0 0 10px; color:var(--gold); font-size:20px; letter-spacing:2px}
+#card p{color:#cdbfdd; line-height:1.5; font-size:13px}
+#card button{margin-top:16px; background:var(--gold); color:#221b2b; border:3px solid #000; font-family:inherit; font-weight:bold; padding:10px 18px; cursor:pointer; letter-spacing:1px}
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="topbar">
+    <div id="title">NIGHT OF THE MUTANT CAT<small>a flat, three humans, one enormous problem</small></div>
+    <button id="hintBtn">💡 HINT</button>
+    <div id="roomname"></div>
+  </div>
+
+  <div id="crew"></div>
+
+  <div id="scene"><svg id="stage" viewBox="0 0 1000 520" preserveAspectRatio="xMidYMid meet"></svg></div>
+
+  <div id="log">Three flatmates. One cat that drank from the fish tank. It has been growing all evening.</div>
+  <div id="sentence"></div>
+
+  <div id="verbs"></div>
+
+  <div id="bottom">
+    <div id="invwrap">
+      <div id="invlabel">INVENTORY (click an item, then a target)</div>
+      <div id="inv"></div>
+    </div>
+    <div id="meter">
+      THE CAT
+      <div id="bar"><div id="barfill"></div></div>
+    </div>
+  </div>
+</div>
+
+<div id="overlay"><div id="card"></div></div>
+
+<script>
+/* ============================ DATA ============================ */
+const CREW = {
+  wes:  { name:"WES",  ab:"Hacks",  ability:"HACK", blurb:"reads manuals for fun" },
+  tank: { name:"TANK", ab:"Lifts",  ability:"LIFT", blurb:"moves heavy things, including himself" },
+  vic:  { name:"DR. VIC", ab:"Calms", ability:"CALM", blurb:"vet student, endless patience" }
+};
+
+const state = {
+  cat:"wes", room:"living", verb:"WALK", item:null,
+  power:false, freezerOpen:false, tunaOpen:false, tunaInFreezer:false,
+  vacuumOn:false, catInKitchen:false, calmed:false,
+  taken:{}, steps:0, won:false
+};
+
+const say = t => document.getElementById("log").textContent = t;
+const step = () => { state.steps++; document.getElementById("barfill").style.width = Math.min(100,state.steps*4)+"%"; };
+const rect = (x,y,w,h,f,e="") => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${f}" ${e}/>`;
+const glow = (x,y,w,h) => `<rect class="glow" x="${x}" y="${y}" width="${w}" height="${h}" fill="#ffffff" opacity="0"/>`;
+
+/* ---- human sprites ---- */
+function personSVG(who, flip){
+  const f = flip ? 'transform="scale(-1,1) translate(-34,0)"' : "";
+  const torso = { wes:`${rect(10,20,14,22,"#3a5d8f")}`, tank:`${rect(7,18,20,24,"#b56a2e")}`, vic:`${rect(10,20,14,22,"#2f7d74")}` }[who];
+  const legs  = { wes:`${rect(11,42,5,12,"#2b3550")}${rect(18,42,5,12,"#2b3550")}`,
+                  tank:`${rect(8,42,7,12,"#3a3a44")}${rect(19,42,7,12,"#3a3a44")}`,
+                  vic:`${rect(11,42,5,12,"#2b3a44")}${rect(18,42,5,12,"#2b3a44")}` }[who];
+  const head  = { wes:`<circle cx="17" cy="14" r="8" fill="#e6b891"/>`,
+                  tank:`<circle cx="17" cy="13" r="9" fill="#c98d63"/>`,
+                  vic:`<circle cx="17" cy="14" r="8" fill="#e6b891"/>` }[who];
+  const hair  = { wes:`<path d="M9 12 q4 -9 16 -7 q4 2 2 6 q-8 -4 -18 1z" fill="#3a2b22"/>`,
+                  tank:`<path d="M8 10 q9 -7 18 0 q-9 -3 -18 0z" fill="#2c2c33"/>`,
+                  vic:`<path d="M9 11 q8 -8 16 0 q-8 -3 -16 0z" fill="#4a2f22"/><circle cx="17" cy="6" r="4" fill="#4a2f22"/>` }[who];
+  const eyes = `${rect(14,13,2,2,"#1b1b22")}${rect(19,13,2,2,"#1b1b22")}`;
+  return `<g ${f}>${legs}${torso}${head}${hair}${eyes}<rect x="8" y="38" width="4" height="6" fill="#e6b891"/><rect x="22" y="38" width="4" height="6" fill="#e6b891"/></g>`;
+}
+
+/* ---- rooms ---- */
+const ROOMS = {
+  living: {
+    name:"THE LIVING ROOM",
+    art: `${rect(0,0,1000,520,"#2a2030")}${rect(0,300,1000,220,"#3a2b34")}${rect(0,286,1000,14,"#4b3743")}
+      ${rect(70,80,150,100,"#4a3b52")}${rect(80,90,130,80,"#6d5a7a")}
+      <text x="145" y="140" text-anchor="middle" font-family="Courier New" font-size="13" fill="#2a2030">NICE FLAT</text>
+      ${rect(690,70,190,130,"#1b2740")}${rect(700,80,170,110,"#3f6fa8")}${rect(784,80,4,110,"#1b2740")}${rect(700,132,170,4,"#1b2740")}
+      <g id="tank">${rect(250,225,190,120,"#20303c")}${rect(258,233,174,104,"#2e5566")}${rect(258,233,174,14,"#3d6d80")}
+        <path id="beast" d="M300 337 q-6 -46 20 -66 q26 -20 12 -46" stroke="#c9a06a" stroke-width="15" fill="none" stroke-linecap="round"/>
+        <circle cx="332" cy="212" r="17" fill="#dcb37c"/>
+        <polygon points="320,200 318,182 334,194" fill="#dcb37c"/><polygon points="344,200 350,183 356,199" fill="#dcb37c"/>
+        <circle cx="326" cy="210" r="3.4" fill="#22301f"/><circle cx="339" cy="210" r="3.4" fill="#22301f"/>
+        <path d="M330 220 q4 4 8 0" stroke="#8d6a44" stroke-width="2" fill="none"/>
+        <ellipse cx="300" cy="322" rx="16" ry="8" fill="#d98b3f"/><ellipse cx="368" cy="330" rx="12" ry="6" fill="#c7b26a"/>
+        ${rect(246,222,198,8,"#16222b")}</g>
+      <g>${rect(60,300,250,90,"#5a3f4d")}${rect(70,282,230,34,"#6b4a5b")}${rect(78,318,40,64,"#6b4a5b")}${rect(252,318,40,64,"#6b4a5b")}</g>
+      ${rect(360,352,150,12,"#6b4a33")}${rect(370,364,8,40,"#5a3e29")}${rect(492,364,8,40,"#5a3e29")}
+      <g id="laptop">${rect(395,326,64,26,"#8d8d99")}${rect(401,331,52,16,"#2b3a4d")}${rect(392,350,70,5,"#a3a3ae")}</g>
+      <g id="vacuum"><ellipse cx="640" cy="386" rx="30" ry="12" fill="#39323f"/><rect x="622" y="360" width="36" height="24" rx="8" fill="#4a4152"/><circle cx="640" cy="372" r="5" fill="#8ef0c4"/></g>
+      <g id="doorL">${rect(860,180,110,180,"#4a3327")}${rect(872,192,86,156,"#5f4331")}<circle cx="946" cy="272" r="5" fill="#d8b25c"/></g>`,
+    exits:{ doorL:"hall" },
+    hotspots:[
+      { id:"tank", name:"fish tank", b:[250,296,190,50], look:()=>"The tank it drank from. Empty, green, faintly radioactive." },
+      { id:"beast", name:"the cat", b:[286,176,116,126], look:()=>state.catInKitchen?"Gone into the kitchen.":"It is the size of a labrador and still growing. It knocked the tank lid off on its way out." },
+      { id:"sofa", name:"sofa", b:[60,282,250,110], look:()=>"Three dents. Nobody sits anywhere else." },
+      { id:"laptop", name:"laptop", b:[392,322,70,34], look:()=>"Wes's laptop. Still on." },
+      { id:"vacuum", name:"robot vacuum", b:[610,356,60,44], look:()=>"Dead on its dock. Wes calls it 'Rosie'." },
+      { id:"doorL", name:"hallway", b:[860,180,110,180], walk:true }
+    ]
+  },
+
+  hall: {
+    name:"THE HALLWAY",
+    art: `${rect(0,0,1000,520,"#221b28")}${rect(0,300,1000,220,"#33262f")}${rect(0,286,1000,14,"#43323c")}
+      <g id="doorLiv">${rect(40,170,120,190,"#4a3327")}${rect(52,182,96,166,"#5f4331")}<circle cx="132" cy="266" r="5" fill="#d8b25c"/></g>
+      <g id="doorKit">${rect(420,170,120,190,"#4a3327")}${rect(432,182,96,166,"#5f4331")}<circle cx="512" cy="266" r="5" fill="#d8b25c"/></g>
+      <g id="doorBath">${rect(790,170,120,190,"#3d5a63")}${rect(802,182,96,166,"#4e7079")}<circle cx="882" cy="266" r="5" fill="#cfe6ea"/></g>
+      <g id="fuse">${rect(590,86,86,64,"#5c5c66")}${rect(598,94,70,48,"#7c7c88")}
+        <circle cx="616" cy="112" r="7" fill="${state.power?"#5fbf7a":"#3f6b4a"}"/><circle cx="640" cy="112" r="7" fill="#7a3f3f"/><circle cx="664" cy="112" r="7" fill="#3f4b6b"/>
+        ${rect(610,128,50,6,"#4a4a54")}</g>
+      <text x="633" y="166" text-anchor="middle" font-family="Courier New" font-size="10" fill="#8d7fa0">FUSE BOX</text>`,
+    exits:{ doorLiv:"living", doorKit:"kitchen", doorBath:"bathroom" },
+    hotspots:[
+      { id:"fuse", name:"fuse box", b:[588,84,92,72], look:()=>state.power?"Breaker is up. The flat hums.":"Main breaker is down, screwed to the wall way above head height. Only Tank is tall enough." },
+      { id:"doorLiv", name:"living room", b:[40,170,120,190], walk:true },
+      { id:"doorKit", name:"kitchen", b:[420,170,120,190], walk:true },
+      { id:"doorBath", name:"bathroom", b:[790,170,120,190], walk:true }
+    ]
+  },
+
+  kitchen: {
+    name:"THE KITCHEN",
+    art: `${rect(0,0,1000,520,"#1f2a26")}${rect(0,300,1000,220,"#2d3a34")}${rect(0,286,1000,14,"#3a4a43")}
+      ${rect(0,250,1000,36,"#4a5a52")}
+      <g id="pantry">${rect(60,120,120,130,"#54382a")}${rect(70,130,100,110,"#6b4835")}${rect(114,130,12,110,"#4a3024")}</g>
+      <text x="120" y="266" text-anchor="middle" font-family="Courier New" font-size="10" fill="#8d7fa0">PANTRY</text>
+      <g id="freezer">${rect(600,270,230,90,"#8fa8b8")}${rect(608,278,214,20,"#c3d6e2")}${rect(608,304,214,48,"#a8c0ce")}
+        <rect x="690" y="284" width="60" height="8" rx="3" fill="#5d7484"/>
+        ${state.freezerOpen?`${rect(608,300,214,52,"#cfe6f2")}`:`<path d="M608 300 q40 -10 80 0 q40 10 80 0 q30 -8 54 0" stroke="#dff0f8" stroke-width="7" fill="none"/>`}</g>
+      <text x="715" y="376" text-anchor="middle" font-family="Courier New" font-size="10" fill="#8d7fa0">FREEZER</text>
+      ${rect(300,238,90,48,"#6b7c85")}${rect(310,248,70,28,"#41525c")}
+      <g id="doorHall">${rect(856,180,110,180,"#4a3327")}${rect(868,192,86,156,"#5f4331")}<circle cx="942" cy="272" r="5" fill="#d8b25c"/></g>`,
+    exits:{ doorHall:"hall" },
+    hotspots:[
+      { id:"pantry", name:"pantry", b:[60,120,120,140], look:()=>"Tins and dry food. The tuna is on the bottom shelf, behind the lentils." },
+      { id:"freezer", name:"freezer", b:[598,268,234,94], look:()=>state.freezerOpen?"Open, cold, waiting.":"The lid is iced shut, a good two fingers of frost around the seal." },
+      { id:"sink", name:"sink", b:[300,238,90,48], look:()=>"Two mugs and a fork." },
+      { id:"doorHall", name:"hallway", b:[856,180,110,180], walk:true }
+    ]
+  },
+
+  bathroom: {
+    name:"THE BATHROOM",
+    art: `${rect(0,0,1000,520,"#1e2530")}${rect(0,300,1000,220,"#2b3542")}
+      ${[0,1,2,3,4,5,6,7].map(i=>rect(0,60+i*30,1000,2,"#2a3340")).join("")}
+      ${rect(360,90,190,110,"#4a5a6b")}${rect(370,100,170,90,"#6e8497")}
+      ${rect(390,230,130,40,"#7d8f9e")}${rect(400,240,110,22,"#4d6070")}${rect(450,214,12,20,"#9fb0bd")}
+      <g id="dryer">${rect(210,250,54,18,"#d9503f")}${rect(258,246,26,26,"#b8422f")}${rect(196,254,18,10,"#3a2f47")}
+        <path d="M196 258 q-26 6 -10 -14" stroke="#3a2f47" stroke-width="4" fill="none"/></g>
+      <g>${rect(620,250,240,80,"#8fa0ad")}${rect(628,258,224,56,"#c6d4dd")}</g>
+      <g id="outlet">${rect(340,210,40,34,"#5c6b78")}${rect(348,218,8,10,"#2b3542")}${rect(362,218,8,10,"#2b3542")}</g>
+      <g id="doorHall">${rect(60,170,110,190,"#4a3327")}${rect(72,182,86,166,"#5f4331")}<circle cx="148" cy="266" r="5" fill="#d8b25c"/></g>`,
+    exits:{ doorHall:"hall" },
+    hotspots:[
+      { id:"dryer", name:"hair dryer", b:[196,240,90,36], look:()=>"A hair dryer. In this flat it has one job and it isn't hair." },
+      { id:"outlet", name:"wall outlet", b:[338,208,44,38], look:()=>state.power?"Live. Little light on.":"Dead." },
+      { id:"mirror", name:"mirror", b:[358,88,194,114], look:()=>"You look tired. Three humans, no plan, one enormous cat." },
+      { id:"tub", name:"bathtub", b:[620,250,240,80], look:()=>"Dry. The cat is banned from it since Tuesday." },
+      { id:"doorHall", name:"hallway", b:[60,170,110,180], walk:true }
+    ]
+  }
+};
+
+/* ============================ RENDER ============================ */
+const stage = document.getElementById("stage");
+const verbsEl = document.getElementById("verbs");
+const invEl = document.getElementById("inv");
+const sentEl = document.getElementById("sentence");
+
+const ICONS = {
+  dryer:`<svg viewBox="0 0 40 40">${rect(6,16,20,10,"#d9503f")}${rect(24,13,10,16,"#b8422f")}${rect(2,18,6,6,"#3a2f47")}</svg>`,
+  tuna:`<svg viewBox="0 0 40 40"><ellipse cx="20" cy="22" rx="12" ry="9" fill="#b9c4cc"/><ellipse cx="20" cy="22" rx="10" ry="7" fill="#8a97a1"/><rect x="13" y="19" width="14" height="5" fill="#d9a441"/></svg>`
+};
+
+function renderCrew(){
+  const el = document.getElementById("crew");
+  el.innerHTML = Object.entries(CREW).map(([k,c])=>`
+    <button class="crewbtn ${state.cat===k?"on":""}" data-cat="${k}">
+      <svg viewBox="0 0 34 56">${personSVG(k,false)}</svg>
+      <span><span class="nm">${c.name}</span><span class="ab">${c.ab} · ${c.blurb}</span></span>
+    </button>`).join("");
+  el.querySelectorAll(".crewbtn").forEach(b=>b.onclick=()=>{
+    state.cat=b.dataset.cat; state.item=null; state.verb="WALK";
+    say(`${CREW[state.cat].name} takes over.`);
+    renderAll();
+  });
+}
+
+function renderVerbs(){
+  const ab = CREW[state.cat].ability;
+  verbsEl.innerHTML = ["WALK","LOOK","TAKE","USE","OPEN","TALK",ab].map(v=>
+    `<button class="verb ${v===ab?"ability":""} ${state.verb===v?"sel":""}" data-v="${v}">${v}</button>`).join("");
+  verbsEl.querySelectorAll(".verb").forEach(b=>b.onclick=()=>{
+    state.verb = state.verb===b.dataset.v ? "WALK" : b.dataset.v;
+    if(!["USE","LIFT","HACK","CALM"].includes(state.verb)) state.item=null;
+    renderAll();
+  });
+}
+
+function renderInv(){
+  const items = Object.keys(state.taken);
+  invEl.innerHTML = items.length
+    ? items.map(i=>`<div class="slot ${state.item===i?"sel":""}" data-i="${i}">${ICONS[i]||""}</div>`).join("")
+    : `<div style="color:#5f536e;font-size:11px;align-self:center">empty</div>`;
+  invEl.querySelectorAll(".slot").forEach(s=>s.onclick=()=>{
+    const i = s.dataset.i;
+    if(state.item===i){
+      const act = ACTIONS[`${i}|${state.verb}`];
+      if(act && state.verb!=="USE"){ act(); return; }
+      state.item = null; renderAll(); return;
+    }
+    state.item = i; state.verb = "USE";
+    renderAll();
+  });
+}
+
+function renderSentence(){
+  sentEl.innerHTML = state.item
+    ? `<b>${state.verb}</b> ${state.item} with...`
+    : `<b>${state.verb}</b> · ${CREW[state.cat].name}${state.verb==="WALK"?" — click the floor or a door":""}`;
+}
+
+function renderScene(){
+  stage.innerHTML = ROOMS[state.room].art;
+  document.getElementById("roomname").textContent = ROOMS[state.room].name;
+  document.getElementById("barfill").style.width = Math.min(100,state.steps*4)+"%";
+
+  if(!state.won){
+    const g = document.createElementNS("http://www.w3.org/2000/svg","g");
+    g.setAttribute("id","actor");
+    g.setAttribute("pointer-events","none");
+    g.setAttribute("transform",`translate(${state.room==="living"?470:620},436) scale(1.45)`);
+    g.innerHTML = personSVG(state.cat,false);
+    stage.appendChild(g);
+  }
+
+  ROOMS[state.room].hotspots.forEach(h=>{
+    const g = document.createElementNS("http://www.w3.org/2000/svg","g");
+    g.setAttribute("class","hs");
+    g.dataset.hs = h.id;
+    g.innerHTML = glow(h.b[0],h.b[1],h.b[2],h.b[3]);
+    g.addEventListener("click",e=>{ e.stopPropagation(); click(h); });
+    g.addEventListener("mouseenter",()=>{ if(!state.item) sentEl.innerHTML = `<b>${state.verb}</b> · ${h.name}`; });
+    stage.appendChild(g);
+  });
+
+  stage.onclick = walkTo;
+}
+
+function walkTo(e){
+  const g = document.getElementById("actor"); if(!g) return;
+  const r = stage.getBoundingClientRect();
+  const x = Math.max(50, Math.min(940, (e.clientX - r.left) / r.width * 1000));
+  g.style.transition = "transform .3s";
+  g.setAttribute("transform",`translate(${x},436) scale(1.45)`);
+}
+
+const renderAll = () => { renderCrew(); renderVerbs(); renderInv(); renderSentence(); renderScene(); };
+
+/* ============================ LOGIC ============================ */
+function click(h){
+  if(state.won) return;
+  if(h.walk){ const dest = ROOMS[state.room].exits[h.id]; if(dest) go(dest); return; }
+  if(state.verb==="WALK"){ const g=document.getElementById("actor");
+    if(g){ g.style.transition="transform .3s"; g.setAttribute("transform",`translate(${h.b[0]+h.b[2]/2},436) scale(1.45)`);} return; }
+  if(state.verb==="LOOK"){ say(h.look?h.look():"Nothing special."); return; }
+
+  const res = ACTIONS[`${h.id}|${state.verb}`] || ACTIONS[`${h.id}|USE`];
+  if(res){ res(); return; }
+
+  if(state.verb==="TALK"){ say(`${CREW[state.cat].name} says something reasonable. The flat does not answer.`); return; }
+  say(`${CREW[state.cat].name} tries the ${h.name}. Nothing happens.`);
+  step();
+}
+
+const ACTIONS = {
+  "fuse|LIFT": levantar, "fuse|USE": levantar,
+
+  "dryer|TAKE": ()=>{ if(state.taken.dryer) return say("Already holding it.");
+    state.taken.dryer=true; step(); say("Vic unplugs the hair dryer and hands it over."); renderAll(); },
+
+  "pantry|OPEN": sacarAtun, "pantry|USE": sacarAtun,
+
+  "tuna|LIFT": ()=>{
+    if(state.tunaOpen) return say("Already open.");
+    if(CREW[state.cat].ability!=="LIFT") return say(`${CREW[state.cat].name} tugs at the ring. Bare fingernails. Nothing.`);
+    state.tunaOpen=true; step(); say("Tank twists the ring, swears, and the tin pops open. The smell arrives before the sound.");
+  },
+
+  "freezer|USE": ()=>{
+    if(state.item==="tuna"){
+      if(!state.freezerOpen) return say("Freezer is still iced shut.");
+      if(state.tunaInFreezer) return say("Already in there.");
+      state.tunaInFreezer=true; delete state.taken.tuna; state.item=null; step();
+      say("The tuna goes in the freezer. In the living room, something enormous stops walking and starts sniffing.");
+      renderAll(); return;
+    }
+    if(state.freezerOpen){
+      if(!state.catInKitchen) return say("Open. The cat is still out there — it needs a reason to come in.");
+      state.won=true; step(); win(); return;
+    }
+    if(!state.taken.dryer) return say("Need heat for that ice. The hair dryer, in the bathroom.");
+    if(!state.power) return say("Hair dryer is dead. There's no power.");
+    state.freezerOpen=true; step(); say("Vic aims the dryer. The ice hisses, cracks and the lid drops open.");
+  },
+  "freezer|OPEN": ()=>ACTIONS["freezer|USE"](),
+
+  "laptop|HACK": encenderAspiradora, "laptop|USE": encenderAspiradora,
+
+  "beast|CALM": ()=>{
+    if(state.catInKitchen) return say("It's in the kitchen already, nose in the freezer.");
+    if(CREW[state.cat].ability!=="CALM") return say(`${CREW[state.cat].name} approaches. The cat lifts a paw the size of a dinner plate.`);
+    if(!state.tunaInFreezer) return say("Vic calms it, but it's not interested in moving yet. It needs the tuna in the freezer first.");
+    state.calmed=true; step();
+    say("Vic crouches, slow blink, one hand out. The cat slow-blinks back and starts walking — toward the smell, into the kitchen.");
+    state.catInKitchen=true; renderAll();
+  },
+  "beast|USE": ()=>ACTIONS["beast|CALM"](),
+  "vacuum|USE": ()=>say(state.vacuumOn?"It's doing laps around the sofa.":"Dead. Wes can wake it from the laptop.")
+};
+
+function levantar(){
+  if(state.power) return say("The breaker is already up.");
+  if(CREW[state.cat].ability!=="LIFT") return say(`${CREW[state.cat].name} reaches. Fingertips, air. Tank is the tall one.`);
+  state.power=true; step();
+  say("Tank stretches, flips the breaker with two fingers and the whole flat hums back to life.");
+  renderAll();
+}
+
+function sacarAtun(){
+  if(state.taken.tuna) return say("Tuna is already out.");
+  if(CREW[state.cat].ability!=="LIFT") return say(`${CREW[state.cat].name} can't shift the door past the lentils.`);
+  state.taken.tuna=true; step(); say("Tank shoulders the pantry open. A tin of tuna rolls across the tiles.");
+  renderAll();
+}
+
+function encenderAspiradora(){
+  if(state.vacuumOn) return say("Rosie is already doing laps.");
+  if(!state.power) return say("Laptop is dead without power.");
+  if(CREW[state.cat].ability!=="HACK") return say(`${CREW[state.cat].name} presses keys at random. Nothing. Wes knows the sequence.`);
+  state.vacuumOn=true; step();
+  say("Wes types something absurd. Rosie chirps off her dock and rolls out. The cat's ears go flat.");
+  if(state.catInKitchen) renderAll();
+}
+
+function go(room){
+  if(state.won) return;
+  state.room=room; state.item=null; state.verb="WALK"; step();
+  say(room==="kitchen"&&state.catInKitchen
+    ? "The kitchen. The cat is here, nose buried in the open freezer."
+    : ROOMS[room].name.replace("THE ","").toLowerCase().replace(/^./,c=>c.toUpperCase())+".");
+  renderAll();
+}
+
+function win(){
+  say("The lid comes down on a very large cat. Nobody breathes for a moment.");
+  document.getElementById("overlay").classList.add("on");
+  document.getElementById("card").innerHTML = `
+    <h1>CAT, FROZEN</h1>
+    <p>The lid comes down. Rosie bumps it, loyal and stupid. Inside, an enormous shape goes stiff and small.</p>
+    <p>The three of them sit on the kitchen floor watching the frost crawl across the lid, the way people sit outside an operating theatre.</p>
+    <p style="color:#8d7fa0;font-size:11px;margin-top:14px">Done in ${state.steps} actions.</p>
+    <button onclick="location.reload()">PLAY AGAIN</button>`;
+}
+
+document.getElementById("hintBtn").onclick = ()=>{
+  say("💡 " + (()=>{
+    if(!state.power) return "No power. Fuse box in the hallway, too high — Tank lifts.";
+    if(!state.taken.dryer) return "Hair dryer, bathroom. Take it.";
+    if(!state.freezerOpen) return "Aim the hair dryer at the freezer lid.";
+    if(!state.taken.tuna) return "Tank can open the pantry, and pry the tin.";
+    if(!state.tunaInFreezer) return "Open tuna in the open freezer.";
+    if(!state.vacuumOn) return "Wes hacks the laptop to start Rosie.";
+    if(!state.calmed) return "Vic calms the cat — but only after the tuna is in the freezer.";
+    return "The cat is in the kitchen. Use the freezer to shut the lid.";
+  })());
+};
+
+renderAll();
+</script>
+</body>
+</html>
