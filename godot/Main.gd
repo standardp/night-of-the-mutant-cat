@@ -144,8 +144,7 @@ func _build() -> void:
 	add_child(clear)
 
 	# fuente pixel, sin suavizado
-	var pf := FontFile.new()
-	pf.load_dynamic_font("res://assets/font.ttf")
+	var pf: FontFile = load("res://assets/font.ttf")
 	pf.antialiasing = TextServer.FONT_ANTIALIASING_NONE
 	pf.hinting = TextServer.HINTING_NONE
 	pf.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED

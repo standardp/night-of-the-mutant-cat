@@ -15,7 +15,7 @@ window/size/window_width_override=960
 window/size/window_height_override=780
 window/stretch/mode="canvas_items"
 window/stretch/aspect="keep"
-window/stretch/scale_mode="integer"
+window/stretch/scale_mode="fractional"
 
 [rendering]
 
